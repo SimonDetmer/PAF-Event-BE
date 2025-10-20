@@ -5,7 +5,6 @@ import org.example.eventm.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/ticket-service")
 public class TicketServiceController {
