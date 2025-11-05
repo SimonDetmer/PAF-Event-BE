@@ -1,45 +1,44 @@
 package org.example.eventm.api.controller;
 
 import jakarta.validation.Valid;
+import org.example.eventm.api.dtos.CreateOrderRequest;
 import org.example.eventm.api.model.Order;
-import org.example.eventm.api.repository.OrderRepository;
-import org.example.eventm.api.repository.TicketRepository;
+import org.example.eventm.service.OrderService;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
 
-
-    private final TicketRepository ticketRepository;
-
-    public OrderController(OrderRepository orderRepository, TicketRepository ticketRepository) {
-        this.orderRepository = orderRepository;
-        this.ticketRepository = ticketRepository;
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @GetMapping
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        return orderService.getAllOrders();
     }
 
     @PostMapping
-    public Order createOrder(@Valid @RequestBody Order order) {
-        // Bei jedem Ticket sicherstellen, dass die ID null ist
-        if (order.getTickets() != null) {
-            order.getTickets().forEach(ticket -> {
-                ticket.setId(null);
-                ticket.setOrder(order); // Order-Beziehung setzen
-            });
-
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+        try {
+            Order order = orderService.createOrder(request);
+            return ResponseEntity.ok(order);
+        } catch (OptimisticLockingFailureException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                    "error", "CONCURRENT_MODIFICATION",
+                    "message", "The event was modified by another transaction. Please refresh and try again."
+                ));
         }
-
-        return orderRepository.save(order);
     }
 
     @GetMapping("/{id}")

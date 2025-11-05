@@ -2,6 +2,7 @@ package org.example.eventm.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,6 +46,13 @@ public class Event {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Version
+    private Integer version;
+
+    @Column(name = "available_tickets")
+    @Min(0)
+    private Integer availableTickets = 0;
 
     // Getter und Setter
     public LocalDateTime getCreatedAt() {

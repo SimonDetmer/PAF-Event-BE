@@ -1,5 +1,6 @@
 package org.example.eventm.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
-//@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Order {
 
     @Id
@@ -19,9 +20,15 @@ public class Order {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "status")
-    @NotBlank
-    private String status;
+    public enum Status {
+        PENDING,
+        COMPLETED,
+        CANCELLED
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status = Status.PENDING;
 
     // Jede Order gehört zu genau einem User.
     @ManyToOne(fetch = FetchType.LAZY)
