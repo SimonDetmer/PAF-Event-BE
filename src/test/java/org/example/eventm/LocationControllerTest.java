@@ -15,11 +15,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -40,42 +44,85 @@ public class LocationControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(locationController).build();
+        
+        // Initialize a valid Location object with required fields
         location = new Location();
         location.setId(1);
+        location.setStreet("Test Street");
+        location.setGeoX(new BigDecimal("0.0"));
+        location.setGeoY(new BigDecimal("0.0"));
+        location.setCapacity(BigInteger.valueOf(100));
     }
 
     @Test
     void testGetAllLocations() throws Exception {
-        when(locationRepository.findAll()).thenReturn(Arrays.asList(location));
+        // Given
+        List<Location> locations = Arrays.asList(location);
+        when(locationRepository.findAll()).thenReturn(locations);
 
-        mockMvc.perform(get("/locations"))
-                .andExpect(status().isOk());
+        // When/Then
+        mockMvc.perform(get("/api/locations")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(location.getId())));
+
+        verify(locationRepository, times(1)).findAll();
     }
 
     @Test
     void testGetLocationById() throws Exception {
+        // Given
         when(locationRepository.findById(1)).thenReturn(Optional.of(location));
 
-        mockMvc.perform(get("/locations/1"))
-                .andExpect(status().isOk());
+        // When/Then
+        mockMvc.perform(get("/api/locations/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(location.getId())));
+
+        verify(locationRepository, times(1)).findById(1);
     }
 
     @Test
     void testCreateLocation() throws Exception {
+        // Given
         when(locationRepository.save(any(Location.class))).thenReturn(location);
 
-        mockMvc.perform(post("/locations")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(location)))
-                .andExpect(status().isOk());
+        // When/Then
+        mockMvc.perform(post("/api/locations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(location)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(location.getId())));
+
+        verify(locationRepository, times(1)).save(any(Location.class));
     }
 
     @Test
     void testDeleteLocation() throws Exception {
+        // Given
         when(locationRepository.existsById(1)).thenReturn(true);
-        Mockito.doNothing().when(locationRepository).deleteById(1);
+        doNothing().when(locationRepository).deleteById(1);
 
-        mockMvc.perform(delete("/locations/1"))
+        // When/Then
+        mockMvc.perform(delete("/api/locations/1"))
                 .andExpect(status().isNoContent());
+
+        verify(locationRepository, times(1)).existsById(1);
+        verify(locationRepository, times(1)).deleteById(1);
+    }
+
+    @Test
+    void testDeleteLocation_NotFound() throws Exception {
+        // Given
+        when(locationRepository.existsById(999)).thenReturn(false);
+
+        // When/Then
+        mockMvc.perform(delete("/api/locations/999"))
+                .andExpect(status().isNotFound());
+
+        verify(locationRepository, times(1)).existsById(999);
+        verify(locationRepository, never()).deleteById(anyInt());
     }
 }

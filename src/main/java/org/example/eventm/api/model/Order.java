@@ -1,17 +1,24 @@
 package org.example.eventm.api.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Data
 @Entity
 @Table(name = "orders")
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id"
+)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Order {
 
@@ -21,23 +28,45 @@ public class Order {
     private Integer id;
 
     public enum Status {
+        NEW,
         PENDING,
         COMPLETED,
-        CANCELLED
+        CANCELLED;
+        
+        private static final Map<String, Status> LOOKUP = new HashMap<>();
+        
+        static {
+            for (Status status : values()) {
+                LOOKUP.put(status.name().toUpperCase(), status);
+            }
+        }
+        
+        @JsonCreator
+        public static Status fromJson(String status) {
+            if (status == null) {
+                return NEW;
+            }
+            return LOOKUP.getOrDefault(status.toUpperCase(), NEW);
+        }
+        
+        @Deprecated
+        public static Status fromString(String status) {
+            return fromJson(status);
+        }
     }
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private Status status = Status.PENDING;
 
-    // Jede Order gehört zu genau einem User.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonBackReference("user-orders")
     @NotNull
     private User user;
 
-    // Eine Order enthält mehrere Tickets.
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("order-tickets")
     @NotNull
     private List<Ticket> tickets = new ArrayList<>();
 

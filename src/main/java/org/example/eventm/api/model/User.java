@@ -1,18 +1,24 @@
 package org.example.eventm.api.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "users")
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id"
+)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
@@ -26,9 +32,9 @@ public class User {
     @Email
     private String email;
 
-    // Ein User kann mehrere Orders haben.
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnoreProperties("user") // Beim Serialisieren der Orders wird die Eigenschaft "user" ignoriert.
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference("user-orders")
+    @JsonIgnoreProperties("user")
     @NotNull
     private List<Order> orders = new ArrayList<>();
 

@@ -23,9 +23,16 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     
     // Documentation
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
+    
+    // Exclude springdoc-openapi-common to avoid version conflicts
+    configurations.all {
+        exclude group: 'org.springdoc', module: 'springdoc-openapi-common'
+    }
     
     // Development Tools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

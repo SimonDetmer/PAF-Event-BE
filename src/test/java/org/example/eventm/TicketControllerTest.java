@@ -3,6 +3,7 @@ package org.example.eventm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.eventm.api.controller.TicketController;
 import org.example.eventm.api.model.Ticket;
+import org.example.eventm.api.model.Event;
 import org.example.eventm.api.repository.TicketRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +18,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @ExtendWith(MockitoExtension.class)
 public class TicketControllerTest {
@@ -40,15 +44,23 @@ public class TicketControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(ticketController).build();
+        
+        // Create a minimal valid Ticket with required fields
         ticket = new Ticket();
         ticket.setId(1);
+        ticket.setPrice(new BigDecimal("19.99"));
+        
+        // Create a minimal Event (required for the Ticket)
+        Event event = new Event();
+        event.setId(1);
+        ticket.setEvent(event);
     }
 
     @Test
     void testGetAllTickets() throws Exception {
         when(ticketRepository.findAll()).thenReturn(Arrays.asList(ticket));
 
-        mockMvc.perform(get("/tickets"))
+        mockMvc.perform(get("/api/tickets"))
                 .andExpect(status().isOk());
     }
 
@@ -56,18 +68,26 @@ public class TicketControllerTest {
     void testGetTicketById() throws Exception {
         when(ticketRepository.findById(1)).thenReturn(Optional.of(ticket));
 
-        mockMvc.perform(get("/tickets/1"))
+        mockMvc.perform(get("/api/tickets/1"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void testCreateTicket() throws Exception {
+        // Given
         when(ticketRepository.save(any(Ticket.class))).thenReturn(ticket);
-
-        mockMvc.perform(post("/tickets")
+        
+        // When/Then
+        String response = mockMvc.perform(post("/api/tickets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(ticket)))
-                .andExpect(status().isOk());
+                .andDo(print()) // Print the request and response for debugging
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(ticket.getId()))
+                .andExpect(jsonPath("$.price").value(19.99))
+                .andReturn().getResponse().getContentAsString();
+                
+        System.out.println("Response: " + response); // Print the actual response
     }
 
     @Test
@@ -75,7 +95,7 @@ public class TicketControllerTest {
         when(ticketRepository.existsById(1)).thenReturn(true);
         Mockito.doNothing().when(ticketRepository).deleteById(1);
 
-        mockMvc.perform(delete("/tickets/1"))
+        mockMvc.perform(delete("/api/tickets/1"))
                 .andExpect(status().isNoContent());
     }
 }
