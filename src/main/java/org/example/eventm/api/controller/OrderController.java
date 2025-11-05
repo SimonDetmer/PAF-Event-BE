@@ -43,35 +43,21 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
-        return orderRepository.findById(id)
-                .map(ResponseEntity::ok)
+        return orderService.getOrderById(id)
+                .map(order -> ResponseEntity.<Order>ok(order))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Order> updateOrder(@PathVariable Integer id, @Valid @RequestBody Order updatedOrder) {
-        return orderRepository.findById(id)
-                .map(existingOrder -> {
-                    existingOrder.setStatus(updatedOrder.getStatus());
-
-                    // Optional: Wenn Tickets aktualisiert werden sollen, setze sie neu.
-                    // Hier wird die alte Liste ersetzt:
-                    if (updatedOrder.getTickets() != null) {
-                        // Setze zuerst die Order bei jedem Ticket der neuen Liste.
-                        updatedOrder.getTickets().forEach(ticket -> ticket.setOrder(existingOrder));
-                        existingOrder.setTickets(updatedOrder.getTickets());
-                    }
-
-                    Order savedOrder = orderRepository.save(existingOrder);
-                    return ResponseEntity.ok(savedOrder);
-                })
+        return orderService.updateOrder(id, updatedOrder)
+                .map(order -> ResponseEntity.<Order>ok(order))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Integer id) {
-        if (orderRepository.existsById(id)) {
-            orderRepository.deleteById(id);
+        if (orderService.deleteOrder(id)) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();

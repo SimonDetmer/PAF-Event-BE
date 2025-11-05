@@ -50,6 +50,10 @@ public class Order {
         return createdAt;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     // Getter und Setter
     public Integer getId() {
         return id;

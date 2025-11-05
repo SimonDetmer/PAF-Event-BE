@@ -85,4 +85,39 @@ public class OrderService {
     public Order saveOrder(Order order) {
         return orderRepository.save(order);
     }
+
+    public java.util.Optional<Order> getOrderById(Integer id) {
+        return orderRepository.findById(id);
+    }
+
+    @Transactional
+    public java.util.Optional<Order> updateOrder(Integer id, Order updatedOrder) {
+        return orderRepository.findById(id)
+                .map(existingOrder -> {
+                    // Update only the fields that should be updatable
+                    existingOrder.setStatus(updatedOrder.getStatus());
+                    
+                    // If tickets are being updated
+                    if (updatedOrder.getTickets() != null) {
+                        // Clear existing tickets to avoid orphaned records
+                        existingOrder.getTickets().clear();
+                        // Add all tickets from the updated order
+                        updatedOrder.getTickets().forEach(ticket -> {
+                            ticket.setOrder(existingOrder);
+                            existingOrder.getTickets().add(ticket);
+                        });
+                    }
+                    
+                    return orderRepository.save(existingOrder);
+                });
+    }
+
+    @Transactional
+    public boolean deleteOrder(Integer id) {
+        if (orderRepository.existsById(id)) {
+            orderRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
