@@ -1,11 +1,15 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.2'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.2.0'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'org.example'
 version = '0.0.1-SNAPSHOT'
+
+ext {
+    set('springdocVersion', '2.1.0')
+}
 
 java {
     toolchain {
@@ -26,13 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     
     // Documentation
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-    implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
-    
-    // Exclude springdoc-openapi-common to avoid version conflicts
-    configurations.all {
-        exclude group: 'org.springdoc', module: 'springdoc-openapi-common'
-    }
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
     
     // Development Tools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -42,10 +40,22 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     runtimeOnly 'org.postgresql:postgresql'
+    
+    // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.0"
+    }
 }

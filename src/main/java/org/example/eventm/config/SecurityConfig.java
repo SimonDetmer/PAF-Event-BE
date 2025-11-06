@@ -10,28 +10,25 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final String[] SWAGGER_WHITELIST = {
-        // -- Swagger UI v3 (OpenAPI)
-        "/v3/api-docs/**",
-        "/swagger-ui/**",
-        "/swagger-ui.html",
-        "/swagger-resources/**",
-        "/webjars/**",
-        "/favicon.ico",
-        // Actuator endpoints for Spring Boot Admin
-        "/actuator/**"
-    };
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        
         http
             .csrf(csrf -> csrf.disable())  // For development only, enable in production
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(SWAGGER_WHITELIST).permitAll()
+                // Allow all static resources
                 .requestMatchers(
-                    "/api/public/**",
-                    "/error"
+                    "/",
+                    "/error",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/swagger-resources/**",
+                    "/webjars/**"
                 ).permitAll()
+                // Allow all API endpoints (for development)
+                .requestMatchers("/api/**").permitAll()
+                // Require authentication for everything else
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form.disable())
