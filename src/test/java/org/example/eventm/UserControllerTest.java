@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,18 +41,19 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build(); // Manuelles Setup
-        user = new User("john@example.com");
+        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+        user = new User();
         user.setId(1L);
+        user.setEmail("john@example.com");
     }
 
     @Test
     void testGetAllUsers() throws Exception {
         when(userRepository.findAll()).thenReturn(Arrays.asList(user));
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("John Doe"))
+                .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].email").value("john@example.com"));
     }
 
@@ -59,9 +61,10 @@ public class UserControllerTest {
     void testGetUserById() throws Exception {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        mockMvc.perform(get("/users/1"))
+        mockMvc.perform(get("/api/users/1")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("John Doe"))
+                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.email").value("john@example.com"));
     }
 
@@ -69,20 +72,25 @@ public class UserControllerTest {
     void testGetUserById_NotFound() throws Exception {
         when(userRepository.findById(2L)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/users/2"))
+        mockMvc.perform(get("/api/users/2"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void testCreateUser() throws Exception {
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        mockMvc.perform(post("/users")
+        String userJson = "{\"email\":\"john@example.com\"}";
+        
+        mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("John Doe"))
-                .andExpect(jsonPath("$.email").value("john@example.com"));
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.email").value("john@example.com"))
+                .andExpect(jsonPath("$.message").value("User created successfully"));
     }
 
     @Test
@@ -90,7 +98,7 @@ public class UserControllerTest {
         when(userRepository.existsById(1L)).thenReturn(true);
         Mockito.doNothing().when(userRepository).deleteById(1L);
 
-        mockMvc.perform(delete("/users/1"))
+        mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -98,7 +106,7 @@ public class UserControllerTest {
     void testDeleteUser_NotFound() throws Exception {
         when(userRepository.existsById(2L)).thenReturn(false);
 
-        mockMvc.perform(delete("/users/2"))
+        mockMvc.perform(delete("/api/users/2"))
                 .andExpect(status().isNotFound());
     }
 }

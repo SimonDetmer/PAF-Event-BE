@@ -15,10 +15,6 @@ import java.util.Map;
 @Data
 @Entity
 @Table(name = "orders")
-@JsonIdentityInfo(
-    generator = ObjectIdGenerators.PropertyGenerator.class,
-    property = "id"
-)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Order {
 
@@ -61,12 +57,12 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonBackReference("user-orders")
+    @JsonIgnore  // Using DTOs for serialization
     @NotNull
     private User user;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference("order-tickets")
+    @JsonIgnore  // Using DTOs for serialization
     @NotNull
     private List<Ticket> tickets = new ArrayList<>();
 

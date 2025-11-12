@@ -2,6 +2,7 @@ package org.example.eventm.api.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.example.eventm.api.dto.CreateUserRequest;
 import org.example.eventm.api.model.User;
 import org.example.eventm.api.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -56,20 +57,13 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-        log.info("Creating user with email: {}", user.getEmail());
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
+        log.info("Creating user with email: {}", createUserRequest.getEmail());
         try {
-            // Validate email is provided
-            if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-                log.warn("Attempted to create user with empty email");
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Email is required"));
-            }
-            
             // Check if user already exists
-            Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+            Optional<User> existingUser = userRepository.findByEmail(createUserRequest.getEmail());
             if (existingUser.isPresent()) {
-                log.info("User with email {} already exists, returning existing user", user.getEmail());
+                log.info("User with email {} already exists, returning existing user", createUserRequest.getEmail());
                 User existing = existingUser.get();
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", existing.getId());
@@ -79,8 +73,11 @@ public class UserController {
             }
             
             // Create new user
-            user.setCreatedAt(LocalDateTime.now());
-            User savedUser = userRepository.save(user);
+            User newUser = new User();
+            newUser.setEmail(createUserRequest.getEmail());
+            newUser.setCreatedAt(LocalDateTime.now());
+            
+            User savedUser = userRepository.save(newUser);
             log.info("Created new user with ID: {}", savedUser.getId());
             
             // Return response with created user (excluding sensitive/relationship data)

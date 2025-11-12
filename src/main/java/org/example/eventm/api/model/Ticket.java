@@ -29,17 +29,17 @@ public class Ticket {
     @PositiveOrZero
     private BigDecimal price;
 
-    // Beziehung zu Event (falls weiterhin benötigt)
+    // Beziehung zu Event
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
-    @JsonBackReference  // Verhindert rekursive Serialisierung, wenn Event seine Tickets serialisiert.
+    @JsonIgnore  // Using DTOs for serialization
     @NotNull
     private Event event;
 
     // Beziehung zu Order
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
-    @JsonIgnore  // Damit wird das Order-Objekt nicht vollständig mit ausgegeben.
+    @JsonIgnore  // Using DTOs for serialization
     private Order order;
 
     // Standard-Konstruktor
@@ -95,8 +95,7 @@ public class Ticket {
         this.order = order;
     }
 
-    // Neuer Getter, der nur die order_id ausgibt.
-    @JsonProperty("order_id")
+    @JsonIgnore
     public Integer getOrderId() {
         return order != null ? order.getId() : null;
     }

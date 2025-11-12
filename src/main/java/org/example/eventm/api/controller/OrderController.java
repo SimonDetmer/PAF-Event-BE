@@ -4,18 +4,16 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.eventm.api.dtos.CreateOrderRequest;
+import org.example.eventm.api.dtos.OrderDto;
 import org.example.eventm.api.model.Order;
 import org.example.eventm.service.OrderService;
+import org.example.eventm.api.util.DtoMapper;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -30,16 +28,13 @@ public class OrderController {
     public ResponseEntity<?> getAllOrders() {
         log.info("Fetching all orders");
         try {
-            List<Map<String, Object>> orderDtos = orderService.getAllOrders().stream()
-                .map(this::convertToOrderDto)
-                .collect(Collectors.toList());
-            
+            List<OrderDto> orderDtos = DtoMapper.toOrderDtos(orderService.getAllOrders());
             log.info("Found {} orders", orderDtos.size());
             return ResponseEntity.ok(orderDtos);
         } catch (Exception e) {
             log.error("Error fetching orders", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(createErrorResponse("Error fetching orders", e));
+                    .body(createErrorResponse("Error fetching orders", e.getMessage()));
         }
     }
 
@@ -47,15 +42,14 @@ public class OrderController {
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request) {
         log.info("Creating order for user: {}", request.getUserId());
         try {
-            // The status is set to PENDING by default in the service
             Order order = orderService.createOrder(request);
-            
-            // Convert to DTO to avoid serialization issues
-            Map<String, Object> orderDto = convertToOrderDto(order);
-            orderDto.put("message", "Order created successfully");
+            OrderDto orderDto = DtoMapper.toOrderDto(order);
             
             log.info("Order created successfully with ID: {}", order.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(orderDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Order created successfully",
+                "order", orderDto
+            ));
             
         } catch (IllegalArgumentException e) {
             log.error("Invalid order data: {}", e.getMessage());
@@ -83,7 +77,7 @@ public class OrderController {
             return orderService.getOrderById(id)
                     .map(order -> {
                         log.info("Found order with ID: {}", id);
-                        return ResponseEntity.ok(convertToOrderDto(order));
+                        return ResponseEntity.ok(DtoMapper.toOrderDto(order));
                     })
                     .orElseGet(() -> {
                         log.warn("Order not found with ID: {}", id);
@@ -158,19 +152,15 @@ public class OrderController {
         return dto;
     }
     
-    private Map<String, Object> createErrorResponse(String error, Exception e) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", error);
-        response.put("message", e.getMessage() != null ? e.getMessage() : "No additional details available");
-        response.put("type", e.getClass().getSimpleName());
-        return response;
+    private Map<String, Object> createErrorResponse(String error, String message) {
+        return Map.of(
+            "error", error,
+            "message", message
+        );
     }
     
-    private Map<String, Object> createErrorResponse(String error, String message) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", error);
-        response.put("message", message);
-        return response;
+    private Map<String, Object> createErrorResponse(String error, Exception e) {
+        return createErrorResponse(error, e.getMessage());
     }
     
     /**
