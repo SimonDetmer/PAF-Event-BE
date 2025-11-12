@@ -2,8 +2,8 @@ package org.example.eventm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.eventm.api.controller.OrderController;
-import org.example.eventm.api.dtos.CreateOrderRequest;
-import org.example.eventm.api.dtos.OrderItemDto;
+import org.example.eventm.api.dto.CreateOrderRequest;
+import org.example.eventm.api.dto.OrderItemDto;
 import org.example.eventm.api.model.Order;
 import org.example.eventm.api.model.User;
 import org.example.eventm.service.OrderService;
@@ -113,7 +113,7 @@ public class OrderControllerTest {
         OrderItemDto item1 = new OrderItemDto();
         item1.setEventId(1);
         item1.setQuantity(2);
-        item1.setVersion(1);
+        item1.setVersion(0);
         
         request.setItems(List.of(item1));
         

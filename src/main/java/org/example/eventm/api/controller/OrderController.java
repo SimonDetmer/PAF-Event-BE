@@ -3,8 +3,9 @@ package org.example.eventm.api.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.eventm.api.dtos.CreateOrderRequest;
-import org.example.eventm.api.dtos.OrderDto;
+import org.example.eventm.api.dto.CreateOrderRequest;
+import org.example.eventm.api.dto.OrderDto;
+import java.util.Map;
 import org.example.eventm.api.model.Order;
 import org.example.eventm.service.OrderService;
 import org.example.eventm.api.util.DtoMapper;
@@ -22,7 +23,6 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     @GetMapping
     public ResponseEntity<?> getAllOrders() {
@@ -128,28 +128,9 @@ public class OrderController {
         }
     }
 
-    // Helper methods
-    private Map<String, Object> convertToOrderDto(Order order) {
-        Map<String, Object> dto = new HashMap<>();
-        dto.put("id", order.getId());
-        dto.put("status", order.getStatus().name());
-        dto.put("createdAt", order.getCreatedAt() != null ? 
-            order.getCreatedAt().format(formatter) : null);
-        
-        // Add user info
-        if (order.getUser() != null) {
-            Map<String, Object> userDto = new HashMap<>();
-            userDto.put("id", order.getUser().getId());
-            userDto.put("email", order.getUser().getEmail());
-            dto.put("user", userDto);
-        }
-        
-        // Add tickets info if needed
-        if (order.getTickets() != null && !order.getTickets().isEmpty()) {
-            dto.put("ticketCount", order.getTickets().size());
-        }
-        
-        return dto;
+    // Helper method to convert Order to DTO
+    private OrderDto convertToOrderDto(Order order) {
+        return DtoMapper.toOrderDto(order);
     }
     
     private Map<String, Object> createErrorResponse(String error, String message) {
@@ -161,18 +142,5 @@ public class OrderController {
     
     private Map<String, Object> createErrorResponse(String error, Exception e) {
         return createErrorResponse(error, e.getMessage());
-    }
-    
-    /**
-     * Safely converts a status string to Order.Status enum.
-     * Defaults to PENDING if the status is invalid.
-     */
-    private Order.Status convertToOrderStatus(String status) {
-        try {
-            return Order.Status.fromString(status);
-        } catch (Exception e) {
-            log.warn("Invalid status '{}' provided, defaulting to PENDING", status);
-            return Order.Status.PENDING;
-        }
     }
 }

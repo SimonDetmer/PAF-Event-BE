@@ -1,8 +1,8 @@
 package org.example.eventm.service;
 
 import jakarta.transaction.Transactional;
-import org.example.eventm.api.dtos.CreateOrderRequest;
-import org.example.eventm.api.dtos.OrderItemDto;
+import org.example.eventm.api.dto.CreateOrderRequest;
+import org.example.eventm.api.dto.OrderItemDto;
 import org.example.eventm.api.model.*;
 import org.example.eventm.api.repository.EventRepository;
 import org.example.eventm.api.repository.OrderRepository;
@@ -48,8 +48,9 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
 
             // Check version for optimistic locking
-            if (!event.getVersion().equals(item.getVersion())) {
-                throw new ObjectOptimisticLockingFailureException(Event.class, event.getId());
+            if (item.getVersion() != null && event.getVersion() != null && 
+                !event.getVersion().equals(item.getVersion())) {
+                throw new ObjectOptimisticLockingFailureException("Event has been modified since it was loaded", event);
             }
 
             // Check ticket availability
