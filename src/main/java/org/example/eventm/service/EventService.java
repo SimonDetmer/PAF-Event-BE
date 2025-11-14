@@ -1,33 +1,64 @@
 package org.example.eventm.service;
 
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.example.eventm.api.dto.CreateEventRequest;
 import org.example.eventm.api.model.Event;
+import org.example.eventm.api.model.Location;
+import org.example.eventm.api.model.Ticket;
 import org.example.eventm.api.repository.EventRepository;
+import org.example.eventm.api.repository.LocationRepository;
+import org.example.eventm.api.repository.TicketRepository;
+import org.example.eventm.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class EventService {
-    private final EventRepository eventRepository;
 
-    public EventService(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
+    private final EventRepository eventRepository;
+    private final TicketRepository ticketRepository;
+    private final LocationRepository locationRepository;
+
+    @Transactional
+    public Event createEvent(CreateEventRequest dto) {
+
+        Location location = locationRepository.findById(dto.getLocationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Location not found: " + dto.getLocationId()));
+
+        Event event = new Event();
+        event.setTitle(dto.getTitle());
+        event.setEventDateTime(dto.getEventDateTime());
+        event.setLocation(location);
+        event.setAvailableTickets(dto.getInitialTickets());
+        event.setTicketPrice(dto.getTicketPrice());
+
+        Event savedEvent = eventRepository.save(event);
+
+        // Tickets erzeugen
+        List<Ticket> tickets = new ArrayList<>();
+        for (int i = 0; i < dto.getInitialTickets(); i++) {
+            Ticket t = new Ticket();
+            t.setEvent(savedEvent);
+            t.setPrice(dto.getTicketPrice());
+            tickets.add(t);
+        }
+
+        ticketRepository.saveAll(tickets);
+        savedEvent.setTickets(tickets);
+
+        return savedEvent;
     }
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
-    public Optional<Event> getEventById(int id) {
-        return eventRepository.findById(id);
-    }
-
-    public Event saveEvent(Event event) {
-        return eventRepository.save(event);
-    }
-
-    public void deleteEvent(int id) {
-        eventRepository.deleteById(id);
+    public Event getEventById(Integer id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + id));
     }
 }

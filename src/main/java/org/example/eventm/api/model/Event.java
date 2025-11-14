@@ -6,13 +6,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 @Entity
 @Table(name = "events")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -27,10 +27,8 @@ public class Event {
     @NotBlank
     private String title;
 
-    // Weitere Felder, z. B. Location, Datum/Zeit
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id")
-    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Location location;
 
     @Column(name = "event_datetime")
@@ -38,9 +36,7 @@ public class Event {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime eventDateTime;
 
-    // Ein Event hat mehrere Tickets.
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    @NotNull
     private List<Ticket> tickets = new ArrayList<>();
 
     @CreationTimestamp
@@ -54,12 +50,12 @@ public class Event {
     @Min(0)
     private Integer availableTickets = 0;
 
-    // Getter und Setter
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    @Column(name = "ticket_price", precision = 10, scale = 2)
+    @NotNull
+    private BigDecimal ticketPrice;
 
-    // Getter und Setter
+    // --- Getter & Setter ---
+
     public Integer getId() {
         return id;
     }
@@ -100,7 +96,6 @@ public class Event {
         this.tickets = tickets;
     }
 
-    // Hilfsmethoden
     public void addTicket(Ticket ticket) {
         tickets.add(ticket);
         ticket.setEvent(this);
@@ -109,6 +104,10 @@ public class Event {
     public void removeTicket(Ticket ticket) {
         tickets.remove(ticket);
         ticket.setEvent(null);
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public Integer getVersion() {
@@ -125,5 +124,13 @@ public class Event {
 
     public void setAvailableTickets(Integer availableTickets) {
         this.availableTickets = availableTickets;
+    }
+
+    public BigDecimal getTicketPrice() {
+        return ticketPrice;
+    }
+
+    public void setTicketPrice(BigDecimal ticketPrice) {
+        this.ticketPrice = ticketPrice;
     }
 }

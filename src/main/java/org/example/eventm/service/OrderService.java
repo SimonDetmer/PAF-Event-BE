@@ -31,53 +31,48 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
-        // Find user
+        // User laden
         User user = userRepository.findById(request.getUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
 
-        // Create new order
         Order order = new Order();
         order.setUser(user);
         order.setStatus(Order.Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
 
-        // Process each order item
+        // Für Tickets
         for (OrderItemDto item : request.getItems()) {
-            // Find the event with the given ID
+
             Event event = eventRepository.findById(item.getEventId())
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
 
-            // Check version for optimistic locking
-            if (item.getVersion() != null && event.getVersion() != null && 
-                !event.getVersion().equals(item.getVersion())) {
-                throw new ObjectOptimisticLockingFailureException("Event has been modified since it was loaded", event);
-            }
-
-            // Check ticket availability
+            // KEIN version-check erstmal
+            // Ticket-Verfügbarkeit nur aus Event.availableTickets
             if (event.getAvailableTickets() < item.getQuantity()) {
                 throw new InsufficientTicketsException(
-                    "Not enough tickets available for event: " + event.getTitle() + 
-                    ". Available: " + event.getAvailableTickets());
+                        "Not enough tickets available for event: " + event.getTitle() +
+                                ". Available: " + event.getAvailableTickets());
             }
 
-            // Update available tickets
+            // Verfügbare Tickets reduzieren
             event.setAvailableTickets(event.getAvailableTickets() - item.getQuantity());
             eventRepository.save(event);
 
-            // Create tickets for the order
+            // Tickets erzeugen
             for (int i = 0; i < item.getQuantity(); i++) {
                 Ticket ticket = new Ticket();
                 ticket.setEvent(event);
                 ticket.setOrder(order);
-                ticket.setPrice(event.getTickets().get(0).getPrice()); // Assuming single price per event
+                ticket.setPrice(event.getTicketPrice());
                 order.getTickets().add(ticket);
             }
         }
 
-        // Mark order as completed
         order.setStatus(Order.Status.COMPLETED);
         return orderRepository.save(order);
     }
+
+
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -97,7 +92,7 @@ public class OrderService {
                 .map(existingOrder -> {
                     // Update only the fields that should be updatable
                     existingOrder.setStatus(updatedOrder.getStatus());
-                    
+
                     // If tickets are being updated
                     if (updatedOrder.getTickets() != null) {
                         // Clear existing tickets to avoid orphaned records
@@ -108,7 +103,7 @@ public class OrderService {
                             existingOrder.getTickets().add(ticket);
                         });
                     }
-                    
+
                     return orderRepository.save(existingOrder);
                 });
     }

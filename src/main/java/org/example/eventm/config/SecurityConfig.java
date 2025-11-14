@@ -5,41 +5,53 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
-            .csrf(csrf -> csrf.disable())  // For development only, enable in production
-            .authorizeHttpRequests(auth -> auth
-                // Allow all static resources
-                .requestMatchers(
-                    "/",
-                    "/error",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/swagger-resources/**",
-                    "/webjars/**"
-                ).permitAll()
-                // Allow all API endpoints (for development)
-                .requestMatchers("/api/**").permitAll()
-                // Require authentication for everything else
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form.disable())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .cors(cors -> cors.configurationSource(request -> {
-                var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                corsConfig.setAllowedOrigins(java.util.List.of("*"));
-                corsConfig.setAllowedMethods(java.util.List.of("*"));
-                corsConfig.setAllowedHeaders(java.util.List.of("*"));
-                return corsConfig;
-            }));
+                .csrf(cs -> cs.disable())
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration cfg = new CorsConfiguration();
+                    cfg.setAllowedOrigins(List.of("http://localhost:4200"));
+                    cfg.setAllowCredentials(true);
+
+                    cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    cfg.setAllowedHeaders(List.of(
+                            "Authorization",
+                            "Content-Type",
+                            "X-Requested-With",
+                            "Accept"
+                    ));
+
+                    cfg.setExposedHeaders(List.of("Authorization"));
+                    return cfg;
+                }))
+
+                .authorizeHttpRequests(auth -> auth
+                        // Swagger
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
+                        // FE → BE API
+                        .requestMatchers("/api/**").permitAll()
+
+                        // alles andere blockieren
+                        .anyRequest().permitAll()
+                )
+
+                .formLogin(f -> f.disable())
+                .httpBasic(h -> h.disable());
 
         return http.build();
     }
