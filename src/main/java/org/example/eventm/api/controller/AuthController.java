@@ -1,34 +1,39 @@
 package org.example.eventm.api.controller;
 
-import org.example.eventm.api.service.AuthService;
-import org.example.eventm.api.service.EmailService;
+import org.example.eventm.api.model.User;
+import org.example.eventm.api.repository.UserRepository;
+import org.example.eventm.api.service.TokenGenerator;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
-    private final AuthService authService;
-    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final TokenGenerator tokenGenerator;
 
-    public AuthController(AuthService authService, EmailService emailService) {
-        this.authService = authService;
-        this.emailService = emailService;
+    public AuthController(UserRepository userRepository,
+                          TokenGenerator tokenGenerator) {
+        this.userRepository = userRepository;
+        this.tokenGenerator = tokenGenerator;
     }
 
-    @PostMapping("/request-login")
-    public String requestLogin(@RequestParam String email) {
+    @PostMapping("/login-simple")
+    public Map<String, Object> loginSimple(@RequestParam String email) {
 
-        String token = authService.requestLogin(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        emailService.sendLoginEmail(email, token);
+        String jwt = tokenGenerator.generateJwt(user);
 
-        return "Login-E-Mail gesendet.";
-    }
+        Map<String, Object> response = new HashMap<>();
+        response.put("jwt", jwt);
+        response.put("user", user);
 
-    @PostMapping("/verify")
-    public String verify(@RequestParam String token) {
-        return authService.verifyToken(token);
+        return response;
     }
 }
