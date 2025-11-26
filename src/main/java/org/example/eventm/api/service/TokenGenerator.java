@@ -1,44 +1,53 @@
 package org.example.eventm.api.service;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.example.eventm.api.model.User;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
+import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
 public class TokenGenerator {
 
-    // 256-bit Base64 Key
+    // Für Demo ok, für Produktion: in Config auslagern & langes Secret!
     private static final String SECRET_KEY =
-            "MzJ5ZHNmbGprbHNkZmprbHNkZmtqbmZkc2xrM2poc2prZmQ=";
+            "CHANGE_ME_TO_A_SECURE_SECRET_CHANGE_ME_TO_A_SECURE_SECRET";
 
-    private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
+    private Key getSigningKey() {
+        // Base64-Encoded String → Key
+        byte[] keyBytes = Base64.getEncoder().encode(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * Erzeugt ein JWT mit der E-Mail als Subject.
+     */
     public String generateToken(String email) {
-        return buildJwt(email);
-    }
-
-    public String generateJwt(User user) {
-        return buildJwt(user.getEmail());
-    }
-
-    private String buildJwt(String email) {
-
-        long now = System.currentTimeMillis();
-        long expirationMs = 1000 * 60 * 60 * 24; // 24h
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 1000L * 60 * 60 * 24); // 24h
 
         return Jwts.builder()
-                .setSubject(email)                     // <-- richtig in 0.11
-                .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + expirationMs))
-                .signWith(getKey(), SignatureAlgorithm.HS256) // <-- richtig in 0.11
+                .setSubject(email)                        // <--- korrekt für 0.11.x
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    /**
+     * Email wieder aus dem Token lesen.
+     */
+    public String extractEmail(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())           // <--- korrekt für 0.11.x
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
     }
 }

@@ -16,20 +16,31 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    // optional: Anzeigename
     private String name;
+
+    @Column(nullable = false)
+    private String role; // "eventmanager" oder "customer"
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    // 🔁 Beziehung zu Orders – wichtig für deine Tests
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
 
-    public User() {}
+    // ===== Konstruktoren =====
 
-    public User(String email) {
+    public User() {
+    }
+
+    public User(String email, String role) {
         this.email = email;
+        this.role = role;
         this.createdAt = LocalDateTime.now();
     }
+
+    // ===== Getter / Setter =====
 
     public Long getId() {
         return id;
@@ -53,6 +64,14 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public LocalDateTime getCreatedAt() {

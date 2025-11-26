@@ -1,13 +1,11 @@
-package org.example.eventm.api.security;
+package org.example.eventm.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-
+import org.example.eventm.api.repository.UserRepository;
+import org.example.eventm.api.service.TokenGenerator;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -20,7 +18,14 @@ import java.util.Collections;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private static final String SECRET_KEY = "CHANGE_ME_TO_A_SECURE_SECRET";
+    private final TokenGenerator tokenGenerator;
+    private final UserRepository userRepository;
+
+    public JwtAuthFilter(TokenGenerator tokenGenerator,
+                         UserRepository userRepository) {
+        this.tokenGenerator = tokenGenerator;
+        this.userRepository = userRepository;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -31,33 +36,38 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        // Kein Bearer-Token → einfach weiter
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            try {
-                Claims claims = Jwts.parser()
-                        .setSigningKey(SECRET_KEY)
-                        .parseClaimsJws(token)
-                        .getBody();
+        String token = authHeader.substring(7); // "Bearer " abschneiden
 
-                String email = claims.getSubject();
+        try {
+            String email = tokenGenerator.extractEmail(token);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                Collections.emptyList()
-                        );
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                var userOpt = userRepository.findByEmail(email);
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                if (userOpt.isPresent()) {
+                    var user = userOpt.get();
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (Exception ignored) {
-                // Token ungültig → einfach nicht einloggen
+                    var authToken = new UsernamePasswordAuthenticationToken(
+                            email, // Principal (hier nur String)
+                            null,
+                            Collections.emptyList() // aktuell keine Rollen-Prüfung nötig
+                    );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+
+        } catch (Exception ex) {
+            // Token ungültig → Kontext leer lassen, Security macht dann 401/403 wenn nötig
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
