@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,60 +13,40 @@ import java.util.List;
 @Entity
 @Table(name = "locations")
 public class Location {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
-
-    @Column(name = "street", length = Integer.MAX_VALUE)
+    // Neuer Anzeigename der Location (z. B. "Stadthalle Konstanz")
+    @Column(name = "name", nullable = false, length = 255)
     @NotBlank
-    private String street;
+    private String name;
 
+    // Ort / Stadt
+    @Column(name = "city", nullable = false, length = 255)
+    @NotBlank
+    private String city;
 
-    @Column(name = "geo_x")
-    @NotNull
-    @Digits(integer = 3, fraction = 4)
-    @Min(value = -180)
-    @Max(value = 180)
-    private BigDecimal geoX;
-
-    @Column(name = "geo_y")
-    @NotNull
-    @Digits(integer = 3, fraction = 4)
-    @Min(value = -90)
-    @Max(value = 90)
-    private BigDecimal geoY;
-
-
-    @Column(name="capacity")
+    @Column(name = "capacity")
     @NotNull
     @PositiveOrZero
     @Max(value = 500_000)
     private BigInteger capacity;
 
     @OneToMany(mappedBy = "location", cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
-    @JsonIgnore // Verhindert Serialization-Probleme
+    @JsonIgnore
     private List<Event> events = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // Getter und Setter
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public Location() {
     }
 
-
-
-    public BigInteger getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(BigInteger capacity) {
-        this.capacity = capacity;
-    }
+    // --- Getter / Setter ---
 
     public Integer getId() {
         return id;
@@ -77,28 +56,39 @@ public class Location {
         this.id = id;
     }
 
-    public String getStreet() {
-        return street;
+    public String getName() {
+        return name;
     }
 
-    public void setStreet(String street) {
-        this.street = street;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public BigDecimal getGeoX() {
-        return geoX;
+    public String getCity() {
+        return city;
     }
 
-    public void setGeoX(BigDecimal geoX) {
-        this.geoX = geoX;
+    public void setCity(String city) {
+        this.city = city;
     }
 
-    public BigDecimal getGeoY() {
-        return geoY;
+    public BigInteger getCapacity() {
+        return capacity;
     }
 
-    public void setGeoY(BigDecimal geoY) {
-        this.geoY = geoY;
+    public void setCapacity(BigInteger capacity) {
+        this.capacity = capacity;
     }
 
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

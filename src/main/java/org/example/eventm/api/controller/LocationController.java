@@ -18,16 +18,26 @@ public class LocationController {
         this.locationRepository = locationRepository;
     }
 
+    // ------------------------------------------------------------
+    // ALLE LOCATIONS LADEN
+    // ------------------------------------------------------------
     @GetMapping
     public List<Location> getAllLocations() {
         return locationRepository.findAll();
     }
 
+    // ------------------------------------------------------------
+    // LOCATION ANLEGEN
+    // ------------------------------------------------------------
     @PostMapping
     public Location createLocation(@Valid @RequestBody Location location) {
+        // Name, city, capacity werden direkt aus dem Request-Body übernommen
         return locationRepository.save(location);
     }
 
+    // ------------------------------------------------------------
+    // LOCATION PER ID LADEN
+    // ------------------------------------------------------------
     @GetMapping("/{id}")
     public ResponseEntity<Location> getLocationById(@PathVariable Integer id) {
         return locationRepository.findById(id)
@@ -35,18 +45,28 @@ public class LocationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ------------------------------------------------------------
+    // LOCATION AKTUALISIEREN
+    // ------------------------------------------------------------
     @PutMapping("/{id}")
-    public ResponseEntity<Location> updateLocation(@PathVariable Integer id, @Valid @RequestBody Location updatedLocation) {
+    public ResponseEntity<Location> updateLocation(@PathVariable Integer id,
+                                                   @Valid @RequestBody Location updatedLocation) {
         return locationRepository.findById(id)
                 .map(existingLocation -> {
-                    // Beispiel: Aktualisiere den Namen. Weitere Felder können hier ergänzt werden.
-                    existingLocation.setStreet(updatedLocation.getStreet());
+                    // Felder des neuen Location-Modells übernehmen
+                    existingLocation.setName(updatedLocation.getName());
+                    existingLocation.setCity(updatedLocation.getCity());
+                    existingLocation.setCapacity(updatedLocation.getCapacity());
+
                     Location savedLocation = locationRepository.save(existingLocation);
                     return ResponseEntity.ok(savedLocation);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // ------------------------------------------------------------
+    // LOCATION LÖSCHEN
+    // ------------------------------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
         if (locationRepository.existsById(id)) {

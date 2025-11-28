@@ -1,19 +1,26 @@
 package org.example.eventm.api.dtos;
 
-
 import java.math.BigInteger;
 
 public class LocationOccupancyData {
+
     private Integer locationId;
-    private String street;
+    private String name;
+    private String city;
     private Long ticketCount;
     private BigInteger capacity;
 
-    public LocationOccupancyData() { }
+    public LocationOccupancyData() {
+    }
 
-    public LocationOccupancyData(Integer locationId, String street, Long ticketCount, BigInteger capacity) {
+    public LocationOccupancyData(Integer locationId,
+                                 String name,
+                                 String city,
+                                 Long ticketCount,
+                                 BigInteger capacity) {
         this.locationId = locationId;
-        this.street = street;
+        this.name = name;
+        this.city = city;
         this.ticketCount = ticketCount;
         this.capacity = capacity;
     }
@@ -26,12 +33,20 @@ public class LocationOccupancyData {
         this.locationId = locationId;
     }
 
-    public String getStreet() {
-        return street;
+    public String getName() {
+        return name;
     }
 
-    public void setStreet(String street) {
-        this.street = street;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public Long getTicketCount() {
