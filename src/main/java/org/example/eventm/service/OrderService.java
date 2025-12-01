@@ -3,13 +3,16 @@ package org.example.eventm.service;
 import jakarta.transaction.Transactional;
 import org.example.eventm.api.dto.CreateOrderRequest;
 import org.example.eventm.api.dto.OrderItemDto;
-import org.example.eventm.api.model.*;
+import org.example.eventm.api.model.Event;
+import org.example.eventm.api.model.Order;
+import org.example.eventm.api.model.Ticket;
+import org.example.eventm.api.model.User;
 import org.example.eventm.api.repository.EventRepository;
 import org.example.eventm.api.repository.OrderRepository;
 import org.example.eventm.api.repository.UserRepository;
+import org.example.eventm.api.service.TicketStateService;
 import org.example.eventm.exception.InsufficientTicketsException;
 import org.example.eventm.exception.ResourceNotFoundException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,16 +20,20 @@ import java.util.List;
 
 @Service
 public class OrderService {
+
     private final OrderRepository orderRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final TicketStateService ticketStateService;
 
     public OrderService(OrderRepository orderRepository,
-                       EventRepository eventRepository,
-                       UserRepository userRepository) {
+                        EventRepository eventRepository,
+                        UserRepository userRepository,
+                        TicketStateService ticketStateService) {
         this.orderRepository = orderRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.ticketStateService = ticketStateService;
     }
 
     @Transactional
@@ -46,7 +53,6 @@ public class OrderService {
             Event event = eventRepository.findById(item.getEventId())
                     .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
 
-            // KEIN version-check erstmal
             // Ticket-Verfügbarkeit nur aus Event.availableTickets
             if (event.getAvailableTickets() < item.getQuantity()) {
                 throw new InsufficientTicketsException(
@@ -64,6 +70,10 @@ public class OrderService {
                 ticket.setEvent(event);
                 ticket.setOrder(order);
                 ticket.setPrice(event.getTicketPrice());
+
+                // State-Pattern: Kauf = direkt PURCHASED
+                ticketStateService.purchase(ticket);
+
                 order.getTickets().add(ticket);
             }
         }
@@ -71,8 +81,6 @@ public class OrderService {
         order.setStatus(Order.Status.COMPLETED);
         return orderRepository.save(order);
     }
-
-
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();

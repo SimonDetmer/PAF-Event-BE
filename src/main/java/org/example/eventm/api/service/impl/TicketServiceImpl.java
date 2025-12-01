@@ -5,7 +5,7 @@ import org.example.eventm.api.dto.TicketDto;
 import org.example.eventm.api.model.Ticket;
 import org.example.eventm.api.repository.TicketRepository;
 import org.example.eventm.api.service.TicketService;
-import org.example.eventm.api.util.DtoMapper;
+import org.example.eventm.api.service.TicketStateService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +17,7 @@ import java.util.Optional;
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
+    private final TicketStateService ticketStateService;
 
     @Override
     public List<Ticket> getAllTickets() {
@@ -33,17 +34,20 @@ public class TicketServiceImpl implements TicketService {
     public Ticket createTicket(TicketDto ticketDto) {
         // Map DTO to entity using the mapper
         Ticket ticket = new Ticket();
-        // Map fields from DTO to entity
+
+        // TODO: Event und Order ggf. per Repository laden, wenn du das Feature brauchst
         if (ticketDto.getEventId() != null) {
-            // You would typically fetch the event here and set it
             // eventRepository.findById(ticketDto.getEventId()).ifPresent(ticket::setEvent);
         }
         if (ticketDto.getOrderId() != null) {
-            // You would typically fetch the order here and set it
             // orderRepository.findById(ticketDto.getOrderId()).ifPresent(ticket::setOrder);
         }
+
         ticket.setPrice(ticketDto.getPrice());
-        
+
+        // State-Pattern: neu angelegtes Ticket -> AVAILABLE
+        ticketStateService.initializeNewTicket(ticket);
+
         return ticketRepository.save(ticket);
     }
 

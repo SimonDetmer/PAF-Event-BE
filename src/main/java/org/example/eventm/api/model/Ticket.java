@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.example.eventm.api.model.TicketStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
@@ -42,6 +43,11 @@ public class Ticket {
     @JsonIgnore  // Using DTOs for serialization
     private Order order;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private TicketStatus status;
+
+
     // Standard-Konstruktor
     public Ticket() {}
 
@@ -49,6 +55,7 @@ public class Ticket {
         this.price = price;
         this.event = event;
         this.order = order;
+        this.status = TicketStatus.AVAILABLE;
     }
 
     @CreationTimestamp
@@ -94,6 +101,15 @@ public class Ticket {
     public void setOrder(Order order) {
         this.order = order;
     }
+
+    public TicketStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TicketStatus status) {
+        this.status = status;
+    }
+
 
     @JsonIgnore
     public Integer getOrderId() {
