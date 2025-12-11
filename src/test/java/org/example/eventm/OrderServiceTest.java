@@ -1,10 +1,9 @@
-package org.example.eventm.service;
+package org.example.eventm;
 
 import org.example.eventm.api.dto.CreateOrderRequest;
 import org.example.eventm.api.dto.OrderItemDto;
 import org.example.eventm.api.model.Event;
 import org.example.eventm.api.model.Order;
-import org.example.eventm.api.model.Ticket;
 import org.example.eventm.api.model.User;
 import org.example.eventm.api.repository.EventRepository;
 import org.example.eventm.api.repository.OrderRepository;
@@ -22,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
@@ -38,7 +37,7 @@ class OrderServiceTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private OrderService orderService;
+    private org.example.eventm.service.OrderService orderService;
 
     private User user;
     private Event event;
@@ -46,7 +45,7 @@ class OrderServiceTest {
     @BeforeEach
     void setUp() {
         user = new User();
-        user.setId(1);
+        user.setId(1L); // <-- Long, nicht int
         user.setEmail("customer@test.de");
 
         event = new Event();
@@ -60,9 +59,10 @@ class OrderServiceTest {
         OrderItemDto item = new OrderItemDto();
         item.setEventId(event.getId());
         item.setQuantity(quantity);
+        item.setVersion(0); // falls dein DTO eine Version mitführt
 
         CreateOrderRequest request = new CreateOrderRequest();
-        request.setUserId(user.getId());
+        request.setUserId(user.getId()); // <-- Long
         request.setItems(List.of(item));
 
         return request;
@@ -76,7 +76,7 @@ class OrderServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
 
-        // save(order) soll einfach das gegebene Objekt zurückgeben
+        // Order speichern: gibt einfach das übergebene Objekt zurück
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
