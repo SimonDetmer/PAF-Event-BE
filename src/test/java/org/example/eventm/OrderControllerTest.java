@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -46,13 +47,13 @@ public class OrderControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
-        
+
         // Setup test user
         user = new User();
-        user.setId(1L);
+        user.setId(1L); // <-- Long, nicht int
         user.setEmail("test@example.com");
         user.setOrders(new ArrayList<>());
-        
+
         // Setup test order
         order = new Order();
         order.setId(1);
@@ -62,14 +63,28 @@ public class OrderControllerTest {
         user.getOrders().add(order);
     }
 
+    private CreateOrderRequest buildCreateOrderRequest() {
+        CreateOrderRequest request = new CreateOrderRequest();
+        request.setUserId(1L); // <-- Long
+
+        OrderItemDto item = new OrderItemDto();
+        item.setEventId(1);
+        item.setQuantity(2);
+        item.setVersion(0);
+
+        request.setItems(List.of(item));
+        return request;
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /api/orders
+    // -------------------------------------------------------------------------
     @Test
     void testGetAllOrders() throws Exception {
-        // Given
         when(orderService.getAllOrders()).thenReturn(List.of(order));
 
-        // When/Then
         mockMvc.perform(get("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].id", is(order.getId())));
@@ -77,65 +92,100 @@ public class OrderControllerTest {
         verify(orderService, times(1)).getAllOrders();
     }
 
+    // -------------------------------------------------------------------------
+    // GET /api/orders/{id}
+    // -------------------------------------------------------------------------
     @Test
     void testGetOrderById() throws Exception {
-        // Given
         when(orderService.getOrderById(1)).thenReturn(Optional.of(order));
 
-        // When/Then
         mockMvc.perform(get("/api/orders/1")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(order.getId())));
 
         verify(orderService, times(1)).getOrderById(1);
     }
-    
+
     @Test
     void testGetOrderById_NotFound() throws Exception {
-        // Given
         when(orderService.getOrderById(999)).thenReturn(Optional.empty());
 
-        // When/Then
         mockMvc.perform(get("/api/orders/999")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         verify(orderService, times(1)).getOrderById(999);
     }
 
+    // -------------------------------------------------------------------------
+    // POST /api/orders – Happy Path
+    // -------------------------------------------------------------------------
     @Test
-    void testCreateOrder() throws Exception {
-        // Given
-        CreateOrderRequest request = new CreateOrderRequest();
-        request.setUserId(1L);
-        
-        OrderItemDto item1 = new OrderItemDto();
-        item1.setEventId(1);
-        item1.setQuantity(2);
-        item1.setVersion(0);
-        
-        request.setItems(List.of(item1));
-        
+    void testCreateOrder_Success() throws Exception {
+        CreateOrderRequest request = buildCreateOrderRequest();
+
         when(orderService.createOrder(any(CreateOrderRequest.class))).thenReturn(order);
 
-        // When/Then
         mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(order.getId())))
-                .andExpect(jsonPath("$.message", is("Order created successfully")));
+                .andExpect(jsonPath("$.message", is("Order created successfully")))
+                // Die ID steckt unter "order.id", nicht direkt auf Root-Level
+                .andExpect(jsonPath("$.order.id", is(order.getId())));
 
         verify(orderService, times(1)).createOrder(any(CreateOrderRequest.class));
     }
 
+    // -------------------------------------------------------------------------
+    // POST /api/orders – Invalid Data (400)
+    // -------------------------------------------------------------------------
+    @Test
+    void testCreateOrder_InvalidData_BadRequest() throws Exception {
+        CreateOrderRequest request = buildCreateOrderRequest();
+
+        when(orderService.createOrder(any(CreateOrderRequest.class)))
+                .thenThrow(new IllegalArgumentException("Invalid data"));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("INVALID_ORDER_DATA")))
+                .andExpect(jsonPath("$.message", containsString("Invalid data")));
+
+        verify(orderService, times(1)).createOrder(any(CreateOrderRequest.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/orders – Concurrency (409)
+    // -------------------------------------------------------------------------
+    @Test
+    void testCreateOrder_ConcurrentModification_Conflict() throws Exception {
+        CreateOrderRequest request = buildCreateOrderRequest();
+
+        when(orderService.createOrder(any(CreateOrderRequest.class)))
+                .thenThrow(new OptimisticLockingFailureException("Concurrent update"));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error", is("CONCURRENT_MODIFICATION")))
+                .andExpect(jsonPath("$.message",
+                        is("The event was modified by another transaction. Please refresh and try again.")));
+
+        verify(orderService, times(1)).createOrder(any(CreateOrderRequest.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // DELETE /api/orders/{id}
+    // -------------------------------------------------------------------------
     @Test
     void testDeleteOrder() throws Exception {
-        // Given
         when(orderService.deleteOrder(1)).thenReturn(true);
 
-        // When/Then
         mockMvc.perform(delete("/api/orders/1"))
                 .andExpect(status().isNoContent());
 
@@ -144,10 +194,8 @@ public class OrderControllerTest {
 
     @Test
     void testDeleteOrder_NotFound() throws Exception {
-        // Given
         when(orderService.deleteOrder(999)).thenReturn(false);
 
-        // When/Then
         mockMvc.perform(delete("/api/orders/999"))
                 .andExpect(status().isNotFound());
 
