@@ -15,15 +15,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.math.BigInteger;
+
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +35,7 @@ public class EventControllerTest {
 
     @Mock
     private EventRepository eventRepository;
-    
+
     @Mock
     private TicketService ticketService;
 
@@ -44,40 +46,40 @@ public class EventControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(eventController)
-            .setControllerAdvice()
-            .build();
-            
-        // Create a minimal valid Location with required fields
+        mockMvc = MockMvcBuilders.standaloneSetup(eventController).build();
+
+        // Minimal valid Location (NEW model: name, city, capacity)
         Location location = new Location();
         location.setId(1);
-        location.setStreet("Test Street");
+        location.setName("Test Location");
+        location.setCity("Konstanz");
         location.setCapacity(BigInteger.valueOf(100));
-        location.setGeoX(new BigDecimal("0.0"));
-        location.setGeoY(new BigDecimal("0.0"));
-        
+
+
         event = new Event();
         event.setId(1);
         event.setTitle("Test Event");
         event.setLocation(location);
-        event.setEventDateTime(java.time.LocalDateTime.now().plusDays(1));
+        event.setEventDateTime(LocalDateTime.now().plusDays(1));
     }
 
     @Test
     void testGetAllEvents() throws Exception {
         // Given
-        List<Event> events = Arrays.asList(event);
+        List<Event> events = Collections.singletonList(event);
         when(eventRepository.findAll()).thenReturn(events);
 
-        // When/Then
+        // If your controller enriches events with ticket sales count, mock it:
         when(ticketService.calculateTicketSalesCount(anyInt())).thenReturn(0L);
-        
+
+        // When/Then
         mockMvc.perform(get("/api/events")
-                .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$", hasSize(1)))
-            .andExpect(jsonPath("$[0].id", is(event.getId().intValue())))
-            .andExpect(jsonPath("$[0].title", is(event.getTitle())));
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id", is(event.getId())))
+                .andExpect(jsonPath("$[0].title", is(event.getTitle())));
 
         verify(eventRepository, times(1)).findAll();
         verify(ticketService, times(1)).calculateTicketSalesCount(event.getId());

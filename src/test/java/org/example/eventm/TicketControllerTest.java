@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.math.BigDecimal;
 
@@ -58,7 +59,7 @@ public class TicketControllerTest {
 
     @Test
     void testGetAllTickets() throws Exception {
-        when(ticketRepository.findAll()).thenReturn(Arrays.asList(ticket));
+        when(ticketRepository.findAll()).thenReturn(Collections.singletonList(ticket));
 
         mockMvc.perform(get("/api/tickets"))
                 .andExpect(status().isOk());

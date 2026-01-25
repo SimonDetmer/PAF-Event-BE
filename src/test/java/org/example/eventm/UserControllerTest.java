@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +50,7 @@ public class UserControllerTest {
 
     @Test
     void testGetAllUsers() throws Exception {
-        when(userRepository.findAll()).thenReturn(Arrays.asList(user));
+        when(userRepository.findAll()).thenReturn(Collections.singletonList(user));
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())

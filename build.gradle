@@ -39,14 +39,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // Database (PostgreSQL)
+    // Database (PostgreSQL) ✅ REQUIRED for org.postgresql.Driver
     runtimeOnly 'org.postgresql:postgresql'
 
-    // 🔐 JWT – JSON Web Token (WICHTIG FÜR TokenGenerator)
+    // 🔐 JWT – JSON Web Token (TokenGenerator)
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
 
     // Test dependencies
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -54,7 +53,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
 }
-
 
 tasks.named('test') {
     useJUnitPlatform()
