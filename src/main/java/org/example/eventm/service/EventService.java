@@ -9,6 +9,7 @@ import org.example.eventm.api.model.Ticket;
 import org.example.eventm.api.repository.EventRepository;
 import org.example.eventm.api.repository.LocationRepository;
 import org.example.eventm.api.repository.TicketRepository;
+import org.example.eventm.api.service.TicketStateService;
 import org.example.eventm.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final TicketRepository ticketRepository;
     private final LocationRepository locationRepository;
+    private final TicketStateService ticketStateService;
 
     @Transactional
     public Event createEvent(CreateEventRequest dto) {
@@ -38,12 +40,16 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(event);
 
-        // Tickets erzeugen
+        // Tickets erzeugen (✅ inkl. status = AVAILABLE)
         List<Ticket> tickets = new ArrayList<>();
         for (int i = 0; i < dto.getInitialTickets(); i++) {
             Ticket t = new Ticket();
             t.setEvent(savedEvent);
             t.setPrice(dto.getTicketPrice());
+
+            // ✅ WICHTIG: status setzen, sonst NOT NULL Fehler in DB
+            ticketStateService.initializeNewTicket(t);
+
             tickets.add(t);
         }
 
@@ -60,5 +66,16 @@ public class EventService {
     public Event getEventById(Integer id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + id));
+    }
+
+    // Sicheres Löschen inkl. Ticket-Cleanup
+    @Transactional
+    public void deleteEvent(Integer id) {
+        if (!eventRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Event not found: " + id);
+        }
+
+        ticketRepository.deleteAllByEventId(id);
+        eventRepository.deleteById(id);
     }
 }

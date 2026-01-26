@@ -14,15 +14,19 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Integer> {
 
+    void deleteAllByEventId(Integer eventId);
+
     // 1. Zeitlicher Verlauf der Ticket-Verkäufe (z. B. pro Tag)
     @Query("SELECT new org.example.eventm.api.dtos.TimeSeriesData(" +
             "CAST(t.order.createdAt as date), COUNT(t)) " +
             "FROM Ticket t " +
+            "WHERE t.order IS NOT NULL " +
             "GROUP BY CAST(t.order.createdAt as date) " +
             "ORDER BY CAST(t.order.createdAt as date)")
     List<TimeSeriesData> findTicketSalesOverTime();
 
-    // 2. Ticket-Verkäufe pro Event (wird in ReportData als ticketSalesPerEvent (List<EventSummaryData>) genutzt)
+
+    // 2. Ticket-Verkäufe pro Event
     @Query("SELECT new org.example.eventm.api.dtos.EventSummaryData(" +
             "e.id, e.title, COUNT(t), SUM(t.price)) " +
             "FROM Ticket t JOIN t.event e " +
@@ -33,19 +37,22 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     @Query("SELECT new org.example.eventm.api.dtos.EventSummaryData(" +
             "e.id, e.title, COUNT(t), SUM(t.price)) " +
             "FROM Ticket t JOIN t.event e " +
+            "WHERE t.order IS NOT NULL " +
             "GROUP BY e.id, e.title")
     List<EventSummaryData> findEventSummaries();
 
-    // 4. Heatmap-Daten: Aggregation der Ticket-Buchungen nach Stunden-Slots (Postgres date_part)
+
+    // 4. Heatmap-Daten
     @Query("SELECT new org.example.eventm.api.dtos.HeatmapData(" +
             "CAST(FUNCTION('date_part', 'hour', t.order.createdAt) as integer), " +
             "COUNT(t)) " +
             "FROM Ticket t " +
+            "WHERE t.order IS NOT NULL " +
             "GROUP BY CAST(FUNCTION('date_part', 'hour', t.order.createdAt) as integer) " +
             "ORDER BY CAST(FUNCTION('date_part', 'hour', t.order.createdAt) as integer)")
     List<HeatmapData> findBookingHeatmapData();
 
-    // 5. Location-Auslastung: Aggregation der Ticket-Sales pro Location
+    // 5. Location-Auslastung
     @Query("SELECT new org.example.eventm.api.dtos.LocationOccupancyData(" +
             "l.id, l.name, l.city, COUNT(t), l.capacity) " +
             "FROM Ticket t JOIN t.event e JOIN e.location l " +

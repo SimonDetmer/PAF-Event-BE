@@ -38,29 +38,32 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
+
         // User laden
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with id: " + request.getUserId()));
 
         Order order = new Order();
         order.setUser(user);
         order.setStatus(Order.Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
 
-        // Für Tickets
+        // Für jedes Event im Warenkorb
         for (OrderItemDto item : request.getItems()) {
 
             Event event = eventRepository.findById(item.getEventId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
 
-            // Ticket-Verfügbarkeit nur aus Event.availableTickets
+            // Verfügbarkeit prüfen
             if (event.getAvailableTickets() < item.getQuantity()) {
                 throw new InsufficientTicketsException(
                         "Not enough tickets available for event: " + event.getTitle() +
                                 ". Available: " + event.getAvailableTickets());
             }
 
-            // Verfügbare Tickets reduzieren
+            // Bestand reduzieren
             event.setAvailableTickets(event.getAvailableTickets() - item.getQuantity());
             eventRepository.save(event);
 
@@ -71,8 +74,9 @@ public class OrderService {
                 ticket.setOrder(order);
                 ticket.setPrice(event.getTicketPrice());
 
-                // State-Pattern: Kauf = direkt PURCHASED
-                ticketStateService.purchase(ticket);
+                // State Pattern korrekt:
+                ticketStateService.initializeNewTicket(ticket); // AVAILABLE
+                ticketStateService.purchase(ticket);            // → PURCHASED
 
                 order.getTickets().add(ticket);
             }
@@ -81,6 +85,10 @@ public class OrderService {
         order.setStatus(Order.Status.COMPLETED);
         return orderRepository.save(order);
     }
+
+    // -------------------------
+    // Standard CRUD
+    // -------------------------
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
@@ -98,14 +106,10 @@ public class OrderService {
     public java.util.Optional<Order> updateOrder(Integer id, Order updatedOrder) {
         return orderRepository.findById(id)
                 .map(existingOrder -> {
-                    // Update only the fields that should be updatable
                     existingOrder.setStatus(updatedOrder.getStatus());
 
-                    // If tickets are being updated
                     if (updatedOrder.getTickets() != null) {
-                        // Clear existing tickets to avoid orphaned records
                         existingOrder.getTickets().clear();
-                        // Add all tickets from the updated order
                         updatedOrder.getTickets().forEach(ticket -> {
                             ticket.setOrder(existingOrder);
                             existingOrder.getTickets().add(ticket);

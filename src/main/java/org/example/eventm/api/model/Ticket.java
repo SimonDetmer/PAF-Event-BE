@@ -45,7 +45,8 @@ public class Ticket {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TicketStatus status;
+    private TicketStatus status = TicketStatus.AVAILABLE;
+
 
 
     // Standard-Konstruktor

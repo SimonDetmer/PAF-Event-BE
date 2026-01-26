@@ -46,7 +46,8 @@ The ticket lifecycle is implemented using the **State Pattern**.
 - AVAILABLE
 - RESERVED
 - PURCHASED
-- CANCELLED (optional)
+- CANCELLED (not active)
+- EXPIRED (not active)
 
 Each state encapsulates its allowed transitions, preventing invalid operations such as purchasing an already purchased ticket.
 
