@@ -36,13 +36,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // Kein Bearer-Token → einfach weiter
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7); // "Bearer " abschneiden
+        String token = authHeader.substring(7);
 
         try {
             String email = tokenGenerator.extractEmail(token);
@@ -66,7 +65,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception ex) {
-            // Token ungültig → Kontext leer lassen, Security macht dann 401/403 wenn nötig
             SecurityContextHolder.clearContext();
         }
 

@@ -69,7 +69,6 @@ public class EventControllerTest {
         List<Event> events = Collections.singletonList(event);
         when(eventRepository.findAll()).thenReturn(events);
 
-        // If your controller enriches events with ticket sales count, mock it:
         when(ticketService.calculateTicketSalesCount(anyInt())).thenReturn(0L);
 
         // When/Then

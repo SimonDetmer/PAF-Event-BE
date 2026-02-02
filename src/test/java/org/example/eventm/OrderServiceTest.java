@@ -45,7 +45,7 @@ class OrderServiceTest {
     @BeforeEach
     void setUp() {
         user = new User();
-        user.setId(1L); // <-- Long, nicht int
+        user.setId(1L);
         user.setEmail("customer@test.de");
 
         event = new Event();
@@ -59,7 +59,7 @@ class OrderServiceTest {
         OrderItemDto item = new OrderItemDto();
         item.setEventId(event.getId());
         item.setQuantity(quantity);
-        item.setVersion(0); // falls dein DTO eine Version mitführt
+        item.setVersion(0);
 
         CreateOrderRequest request = new CreateOrderRequest();
         request.setUserId(user.getId()); // <-- Long
@@ -76,7 +76,7 @@ class OrderServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
 
-        // Order speichern: gibt einfach das übergebene Objekt zurück
+        // Order speichern
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act

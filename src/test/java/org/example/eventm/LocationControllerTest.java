@@ -1,8 +1,9 @@
-package org.example.eventm.api.controller;
+package org.example.eventm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.eventm.api.model.Location;
 import org.example.eventm.api.repository.LocationRepository;
+import org.example.eventm.api.controller.LocationController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigInteger;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class LocationControllerTest {
@@ -45,7 +48,7 @@ class LocationControllerTest {
         loc.setId(1);
         loc.setName("Stadthalle");
         loc.setCity("Konstanz");
-        loc.setCapacity(BigDecimal.valueOf(500));
+        loc.setCapacity(BigInteger.valueOf(500));
         return loc;
     }
 

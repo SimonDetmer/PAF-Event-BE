@@ -14,7 +14,6 @@ public class TicketService {
     private TicketRepository ticketRepository;
 
     public long calculateTicketSalesCount(Integer eventId) {
-        // Beispiel: Alle relevanten Entities abrufen
         List<Ticket> entities = ticketRepository.findAll();
 
         return ticketRepository.findAll().stream()

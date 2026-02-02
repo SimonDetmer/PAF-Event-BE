@@ -1,4 +1,4 @@
-package org.example.eventm.api.dtos;
+package org.example.eventm.api.dto;
 
 
 
@@ -11,14 +11,6 @@ public class HeatmapData {
     // Existierender Konstruktor
     public HeatmapData(Integer timeSlot, Long ticketCount) {
         this.timeSlot = timeSlot;
-        this.ticketCount = ticketCount;
-    }
-
-    // Neuer Konstruktor für String als Zeit-Slot (z.B. "08")
-    public HeatmapData(String timeSlot, Long ticketCount) {
-        // Falls der String eine Zahl repräsentiert, wandeln wir ihn in einen Integer um.
-        // Alternativ kannst du den String auch direkt speichern, wenn du ihn so brauchst.
-        this.timeSlot = Integer.valueOf(timeSlot);
         this.ticketCount = ticketCount;
     }
 

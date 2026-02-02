@@ -1,4 +1,4 @@
-package org.example.eventm.api.dtos;
+package org.example.eventm.api.dto;
 
 import java.math.BigInteger;
 
