@@ -79,7 +79,6 @@ public class Order {
         this.createdAt = createdAt;
     }
 
-    // Getter und Setter
     public Integer getId() {
         return id;
     }
@@ -112,7 +111,6 @@ public class Order {
         this.tickets = tickets;
     }
 
-    // Hilfsmethoden zum Hinzufügen und Entfernen von Tickets
     public void addTicket(Ticket ticket) {
         tickets.add(ticket);
 

@@ -4,7 +4,7 @@ import org.example.eventm.api.controller.EventController;
 import org.example.eventm.api.model.Event;
 import org.example.eventm.api.model.Location;
 import org.example.eventm.api.repository.EventRepository;
-import org.example.eventm.service.TicketService;
+import org.example.eventm.service.TicketReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +37,7 @@ public class EventControllerTest {
     private EventRepository eventRepository;
 
     @Mock
-    private TicketService ticketService;
+    private TicketReportService ticketReportService;
 
     @InjectMocks
     private EventController eventController;
@@ -70,7 +70,7 @@ public class EventControllerTest {
         when(eventRepository.findAll()).thenReturn(events);
 
         // If your controller enriches events with ticket sales count, mock it:
-        when(ticketService.calculateTicketSalesCount(anyInt())).thenReturn(0L);
+        when(ticketReportService.calculateTicketSalesCount(anyInt())).thenReturn(0L);
 
         // When/Then
         mockMvc.perform(get("/api/events")
@@ -82,6 +82,6 @@ public class EventControllerTest {
                 .andExpect(jsonPath("$[0].title", is(event.getTitle())));
 
         verify(eventRepository, times(1)).findAll();
-        verify(ticketService, times(1)).calculateTicketSalesCount(event.getId());
+        verify(ticketReportService, times(1)).calculateTicketSalesCount(event.getId());
     }
 }

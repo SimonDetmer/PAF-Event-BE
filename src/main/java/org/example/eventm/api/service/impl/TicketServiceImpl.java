@@ -45,7 +45,6 @@ public class TicketServiceImpl implements TicketService {
 
         ticket.setPrice(ticketDto.getPrice());
 
-        // State-Pattern: neu angelegtes Ticket -> AVAILABLE
         ticketStateService.initializeNewTicket(ticket);
 
         return ticketRepository.save(ticket);

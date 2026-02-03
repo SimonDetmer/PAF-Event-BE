@@ -28,7 +28,7 @@ public class UserController {
     }
 
     // ------------------------------------------------------------
-    //  GET /api/users  – Liste aller User (vereinfachtes DTO)
+    //  GET /api/users
     // ------------------------------------------------------------
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
@@ -62,8 +62,7 @@ public class UserController {
     }
 
     // ------------------------------------------------------------
-    //  GET /api/users/me – aktuell eingeloggter User
-    //  -> wird vom JWT (JwtAuthFilter) + Authentication gespeist
+    //  GET /api/users/me
     // ------------------------------------------------------------
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
@@ -89,8 +88,7 @@ public class UserController {
     }
 
     // ------------------------------------------------------------
-    //  POST /api/users – Registrierung
-    //  Body: { "email": "...", "role": "eventmanager" | "customer", "name": "optional" }
+    //  POST /api/users
     // ------------------------------------------------------------
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
@@ -110,7 +108,6 @@ public class UserController {
                         .body(Map.of("message", "Role is required"));
             }
 
-            // optional: Role validieren
             if (!role.equals("eventmanager") && !role.equals("customer")) {
                 return ResponseEntity.badRequest()
                         .body(Map.of("message", "Invalid role: " + role));
@@ -132,7 +129,6 @@ public class UserController {
                 return ResponseEntity.ok(response);
             }
 
-            // Neuen User anlegen
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setRole(role);
@@ -218,7 +214,6 @@ public class UserController {
 
     // ------------------------------------------------------------
     //  PUT /api/users/{id}
-    //  (einfach gehalten – Email + Name + Role aktualisierbar)
     // ------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id,

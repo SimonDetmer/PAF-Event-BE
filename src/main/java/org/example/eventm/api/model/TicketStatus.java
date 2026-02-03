@@ -41,7 +41,6 @@ public enum TicketStatus {
     CANCELLED,
     EXPIRED;
 
-    // Default-Implementierungen: unerlaubte Transitionen schlagen fehl
     public TicketStatus reserve() {
         throw new IllegalStateException("Cannot reserve ticket in state " + this);
     }

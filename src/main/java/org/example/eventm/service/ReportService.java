@@ -1,7 +1,7 @@
 package org.example.eventm.service;
 
-import org.example.eventm.api.dtos.ReportData;
-import org.example.eventm.api.dtos.ReportDataBuilder;
+import org.example.eventm.api.dto.ReportData;
+import org.example.eventm.api.dto.ReportDataBuilder;
 import org.example.eventm.api.repository.EventRepository;
 import org.example.eventm.api.repository.TicketRepository;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,6 @@ public class ReportService {
     }
 
     public ReportData generateReport() throws InterruptedException, ExecutionException {
-        // Nutzen Sie den Builder, um das ReportData Objekt schrittweise zu erstellen.
         return new ReportDataBuilder()
                 .withTicketSalesOverTime(ticketRepository.findTicketSalesOverTime())
                 .withTicketSalesPerEvent(ticketRepository.findTicketSalesPerEvent())

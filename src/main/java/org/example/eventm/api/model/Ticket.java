@@ -30,14 +30,14 @@ public class Ticket {
     @PositiveOrZero
     private BigDecimal price;
 
-    // Beziehung zu Event
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     @JsonIgnore  // Using DTOs for serialization
     @NotNull
     private Event event;
 
-    // Beziehung zu Order
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     @JsonIgnore  // Using DTOs for serialization
@@ -49,7 +49,7 @@ public class Ticket {
 
 
 
-    // Standard-Konstruktor
+
     public Ticket() {}
 
     public Ticket(BigDecimal price, Event event, Order order) {
@@ -67,9 +67,6 @@ public class Ticket {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
-    // Getter und Setter
-
 
     public Integer getId() {
         return id;

@@ -1,6 +1,7 @@
-package org.example.eventm.api.model;
+package org.example.eventm;
 
 import org.junit.jupiter.api.Test;
+import org.example.eventm.api.model.TicketStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 

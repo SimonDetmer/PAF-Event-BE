@@ -19,12 +19,10 @@ public class Location {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    // Neuer Anzeigename der Location (z. B. "Stadthalle Konstanz")
     @Column(name = "name", nullable = false, length = 255)
     @NotBlank
     private String name;
 
-    // Ort / Stadt
     @Column(name = "city", nullable = false, length = 255)
     @NotBlank
     private String city;

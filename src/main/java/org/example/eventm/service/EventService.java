@@ -40,14 +40,12 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(event);
 
-        // Tickets erzeugen (✅ inkl. status = AVAILABLE)
         List<Ticket> tickets = new ArrayList<>();
         for (int i = 0; i < dto.getInitialTickets(); i++) {
             Ticket t = new Ticket();
             t.setEvent(savedEvent);
             t.setPrice(dto.getTicketPrice());
 
-            // ✅ WICHTIG: status setzen, sonst NOT NULL Fehler in DB
             ticketStateService.initializeNewTicket(t);
 
             tickets.add(t);
@@ -68,7 +66,6 @@ public class EventService {
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + id));
     }
 
-    // Sicheres Löschen inkl. Ticket-Cleanup
     @Transactional
     public void deleteEvent(Integer id) {
         if (!eventRepository.existsById(id)) {

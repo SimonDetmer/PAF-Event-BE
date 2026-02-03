@@ -76,7 +76,6 @@ class OrderServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
 
-        // Order speichern: gibt einfach das übergebene Objekt zurück
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
@@ -132,7 +131,7 @@ class OrderServiceTest {
         when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(eventRepository.findById(event.getId())).thenReturn(Optional.of(event));
 
-        // beim Speichern der Order wird ein Optimistic-Locking-Fehler ausgelöst
+        // throw exception when Optimistic-Locking-error occurs when user is trying to save
         when(orderRepository.save(any(Order.class)))
                 .thenThrow(new ObjectOptimisticLockingFailureException(Event.class, event.getId()));
 

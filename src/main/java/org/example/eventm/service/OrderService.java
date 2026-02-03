@@ -39,7 +39,6 @@ public class OrderService {
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
 
-        // User laden
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException("User not found with id: " + request.getUserId()));
@@ -49,32 +48,27 @@ public class OrderService {
         order.setStatus(Order.Status.PENDING);
         order.setCreatedAt(LocalDateTime.now());
 
-        // Für jedes Event im Warenkorb
         for (OrderItemDto item : request.getItems()) {
 
             Event event = eventRepository.findById(item.getEventId())
                     .orElseThrow(() ->
                             new ResourceNotFoundException("Event not found with id: " + item.getEventId()));
 
-            // Verfügbarkeit prüfen
             if (event.getAvailableTickets() < item.getQuantity()) {
                 throw new InsufficientTicketsException(
                         "Not enough tickets available for event: " + event.getTitle() +
                                 ". Available: " + event.getAvailableTickets());
             }
 
-            // Bestand reduzieren
             event.setAvailableTickets(event.getAvailableTickets() - item.getQuantity());
             eventRepository.save(event);
 
-            // Tickets erzeugen
             for (int i = 0; i < item.getQuantity(); i++) {
                 Ticket ticket = new Ticket();
                 ticket.setEvent(event);
                 ticket.setOrder(order);
                 ticket.setPrice(event.getTicketPrice());
 
-                // State Pattern korrekt:
                 ticketStateService.initializeNewTicket(ticket); // AVAILABLE
                 ticketStateService.purchase(ticket);            // → PURCHASED
 

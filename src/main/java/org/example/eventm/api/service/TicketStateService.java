@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 public class TicketStateService {
 
     private TicketStatus getEffectiveStatus(Ticket ticket) {
-        // Falls noch kein Status gesetzt wurde, behandeln wir das Ticket als AVAILABLE
         return ticket.getStatus() != null ? ticket.getStatus() : TicketStatus.AVAILABLE;
     }
 

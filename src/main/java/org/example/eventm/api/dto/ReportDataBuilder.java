@@ -1,4 +1,4 @@
-package org.example.eventm.api.dtos;
+package org.example.eventm.api.dto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +11,6 @@ public class ReportDataBuilder {
         this.reportData = new ReportData();
     }
 
-    // ----------------------------------------------------
-    // Zeitlicher Verlauf der Ticket-Verkäufe
-    // ----------------------------------------------------
     public ReportDataBuilder withTicketSalesOverTime(List<TimeSeriesData> ticketSalesOverTime) {
         if (ticketSalesOverTime == null) {
             ticketSalesOverTime = new ArrayList<>();
@@ -22,9 +19,7 @@ public class ReportDataBuilder {
         return this;
     }
 
-    // ----------------------------------------------------
-    // Ticket-Sales pro Event (z. B. für Pie-Chart)
-    // ----------------------------------------------------
+
     public ReportDataBuilder withTicketSalesPerEvent(List<EventSummaryData> ticketSalesPerEvent) {
         if (ticketSalesPerEvent == null) {
             ticketSalesPerEvent = new ArrayList<>();
@@ -33,9 +28,6 @@ public class ReportDataBuilder {
         return this;
     }
 
-    // ----------------------------------------------------
-    // Event-Summaries (Tabelle)
-    // ----------------------------------------------------
     public ReportDataBuilder withEventSummaries(List<EventSummaryData> eventSummaries) {
         if (eventSummaries == null) {
             eventSummaries = new ArrayList<>();
@@ -44,9 +36,7 @@ public class ReportDataBuilder {
         return this;
     }
 
-    // ----------------------------------------------------
-    // Heatmap-Daten (Booking-Heatmap)
-    // ----------------------------------------------------
+
     public ReportDataBuilder withBookingHeatmap(List<HeatmapData> bookingHeatmap) {
         if (bookingHeatmap == null) {
             bookingHeatmap = new ArrayList<>();
@@ -55,9 +45,6 @@ public class ReportDataBuilder {
         return this;
     }
 
-    // ----------------------------------------------------
-    // Location-Auslastung
-    // ----------------------------------------------------
     public ReportDataBuilder withLocationOccupancy(List<LocationOccupancyData> locationOccupancy) {
         if (locationOccupancy == null) {
             locationOccupancy = new ArrayList<>();
@@ -66,9 +53,7 @@ public class ReportDataBuilder {
         return this;
     }
 
-    // ----------------------------------------------------
-    // Fertiges Objekt
-    // ----------------------------------------------------
+
     public ReportData build() {
         return reportData;
     }

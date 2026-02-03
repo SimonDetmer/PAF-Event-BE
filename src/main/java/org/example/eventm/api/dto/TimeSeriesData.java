@@ -1,8 +1,7 @@
-package org.example.eventm.api.dtos;
+package org.example.eventm.api.dto;
 
 
 
-import java.sql.Date;
 import java.time.LocalDate;
 
 
@@ -12,13 +11,11 @@ public class TimeSeriesData {
 
     public TimeSeriesData() {}
 
-    // Falls du auch ein LocalDate direkt verarbeiten möchtest
     public TimeSeriesData(LocalDate date, Long ticketCount) {
         this.date = date;
         this.ticketCount = ticketCount;
     }
 
-    // Neuer Konstruktor für java.sql.Date
     public TimeSeriesData(java.sql.Date date, Long ticketCount) {
         // Konvertieren in LocalDate
         this.date = date.toLocalDate();

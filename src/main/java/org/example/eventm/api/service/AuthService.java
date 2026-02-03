@@ -12,9 +12,6 @@ public class AuthService {
         this.tokenGenerator = tokenGenerator;
     }
 
-    /**
-     * Hilfsmethode, falls du vom Backend aus für einen User ein JWT brauchst.
-     */
     public String generateTokenForUser(User user) {
         if (user == null || user.getEmail() == null) {
             throw new IllegalArgumentException("User or email must not be null");

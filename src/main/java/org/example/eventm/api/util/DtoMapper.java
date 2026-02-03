@@ -44,8 +44,6 @@ public class DtoMapper {
                 .collect(Collectors.toList());
     }
 
-    // --- NEU: Event Mapping ---
-
     public static EventDto toEventDto(Event event) {
         if (event == null) {
             return null;

@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)  // Neue Alternative zu @MockBean
+@ExtendWith(MockitoExtension.class)
 public class UserControllerTest {
 
     private MockMvc mockMvc;
@@ -36,7 +36,7 @@ public class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
-    private final ObjectMapper objectMapper = new ObjectMapper(); // JSON Unterstützung
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private User user;
 

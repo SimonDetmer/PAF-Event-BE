@@ -16,7 +16,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // optional: Anzeigename
     private String name;
 
     @Column(nullable = false)
@@ -25,11 +24,9 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Beziehung zu Orders
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
-
-    // ===== Konstruktoren =====
 
     public User() {
     }

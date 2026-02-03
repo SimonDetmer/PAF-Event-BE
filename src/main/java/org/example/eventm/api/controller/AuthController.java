@@ -26,7 +26,6 @@ public class AuthController {
 
     // ------------------------------------------------------------
     //  POST /auth/register?email=...&role=...
-    //  Wird von CreateUserComponent aufgerufen
     // ------------------------------------------------------------
     @PostMapping("/register")
     public ResponseEntity<?> register(
@@ -49,7 +48,6 @@ public class AuthController {
                     .body(Map.of("message", "Invalid role: " + role));
         }
 
-        // Falls User schon existiert → einfach bestehenden zurückgeben
         return userRepository.findByEmail(email)
                 .map(existing -> {
                     Map<String, Object> response = new HashMap<>();

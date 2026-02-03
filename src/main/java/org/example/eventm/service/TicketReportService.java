@@ -8,13 +8,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class TicketService {
+public class TicketReportService {
 
     @Autowired
     private TicketRepository ticketRepository;
 
     public long calculateTicketSalesCount(Integer eventId) {
-        // Beispiel: Alle relevanten Entities abrufen
         List<Ticket> entities = ticketRepository.findAll();
 
         return ticketRepository.findAll().stream()

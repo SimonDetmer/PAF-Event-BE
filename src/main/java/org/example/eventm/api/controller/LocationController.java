@@ -19,7 +19,7 @@ public class LocationController {
     }
 
     // ------------------------------------------------------------
-    // ALLE LOCATIONS LADEN
+    // LOAD ALL LOCATIONS
     // ------------------------------------------------------------
     @GetMapping
     public List<Location> getAllLocations() {
@@ -27,7 +27,7 @@ public class LocationController {
     }
 
     // ------------------------------------------------------------
-    // LOCATION ANLEGEN
+    // ADD LOCATION
     // ------------------------------------------------------------
     @PostMapping
     public Location createLocation(@Valid @RequestBody Location location) {
@@ -36,7 +36,7 @@ public class LocationController {
     }
 
     // ------------------------------------------------------------
-    // LOCATION PER ID LADEN
+    // LOAD LOCATION WITH ID
     // ------------------------------------------------------------
     @GetMapping("/{id}")
     public ResponseEntity<Location> getLocationById(@PathVariable Integer id) {
@@ -46,7 +46,7 @@ public class LocationController {
     }
 
     // ------------------------------------------------------------
-    // LOCATION AKTUALISIEREN
+    // REFRESH LOCATIONS
     // ------------------------------------------------------------
     @PutMapping("/{id}")
     public ResponseEntity<Location> updateLocation(@PathVariable Integer id,
@@ -65,7 +65,7 @@ public class LocationController {
     }
 
     // ------------------------------------------------------------
-    // LOCATION LÖSCHEN
+    // DELETE LOCATION
     // ------------------------------------------------------------
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {

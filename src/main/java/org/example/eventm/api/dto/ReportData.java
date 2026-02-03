@@ -1,21 +1,16 @@
-package org.example.eventm.api.dtos;
+package org.example.eventm.api.dto;
 
 import java.util.List;
 
 public class ReportData {
-    // Für den zeitlichen Verlauf der Ticket-Verkäufe (Linien-/Flächen-Chart)
     private List<TimeSeriesData> ticketSalesOverTime;
 
-    // Für die Verteilung der Ticket-Sales pro Event (Pie-Chart)
     private List<EventSummaryData> ticketSalesPerEvent;
 
-    // Tabelle: Infos, Gesamtumsätze und Verkäufe pro Event
     private List<EventSummaryData> eventSummaries;
 
-    // Für die Heatmap: Beste Zeiten für Ticket-Buchungen
     private List<HeatmapData> bookingHeatmap;
 
-    // Für das Balkendiagramm: Auslastung der Locations
     private List<LocationOccupancyData> locationOccupancy;
 
     public List<TimeSeriesData> getTicketSalesOverTime() {

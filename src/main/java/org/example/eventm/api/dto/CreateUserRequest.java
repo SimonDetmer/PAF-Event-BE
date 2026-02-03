@@ -12,7 +12,6 @@ public class CreateUserRequest {
     @NotBlank
     private String role;   // "eventmanager" oder "customer"
 
-    // optionaler Anzeigename
     private String name;
 
     public CreateUserRequest() {
